@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  consumeResource,
   requestSupplies,
   requestSupplyById,
 } from "../controllers/requests.controller.js";
@@ -10,6 +11,6 @@ router.get("/", requestSupplies);
 
 router.get("/:id", requestSupplyById);
 
-// router.get("/", consumeResources);
+router.get("/consume/:id", consumeResource);
 
 export default router;

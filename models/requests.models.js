@@ -57,3 +57,43 @@ export const updateMaxQuantitiesById = async (id) => {
 
   return "REFILLED";
 };
+
+export const consumeResourceById = async (id) => {
+  // obtener datos del recurso
+  const [[resource]] = await pool.query(
+    `SELECT current_quantity, max_quantity FROM resources WHERE id = ?`,
+    [id]
+  );
+
+  if (!resource) return "NOT_FOUND";
+
+  // si no hay nada para consumir
+  if (resource.current_quantity <= 0) return "NO_STOCK";
+
+  // consumo = 5% del max_quantity
+  const consumeAmount = resource.max_quantity * 0.05;
+
+  // calcular nuevo valor
+  let newQuantity = resource.current_quantity - consumeAmount;
+
+  // evitar valores negativos
+  if (newQuantity < 0) newQuantity = 0;
+
+  // actualizar recurso
+  await pool.query(
+    `
+    UPDATE resources
+    SET current_quantity = ?
+    WHERE id = ?
+    `,
+    [newQuantity, id]
+  );
+
+  // registrar log
+  await addLog(id, "consume", consumeAmount);
+
+  return {
+    consumed: consumeAmount,
+    remaining: newQuantity,
+  };
+};
