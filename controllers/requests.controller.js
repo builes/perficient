@@ -16,22 +16,25 @@ export const requestSupplies = async (req, res) => {
 
 export const requestSupplyById = async (req, res) => {
   const { id } = req.params;
-  try {
-    await updateMaxQuantitiesById(id);
 
-    res.json({ message: `El recurso con ID ${id} fue rellenado al máximo` });
+  try {
+    const result = await updateMaxQuantitiesById(id);
+
+    if (result === "NOT_FOUND") {
+      return res
+        .status(404)
+        .json({ error: `El recurso con ID ${id} no existe` });
+    }
+
+    if (result === "ALREADY_MAX") {
+      return res.json({ message: `El recurso con ID ${id} ya está al máximo` });
+    }
+
+    return res.json({
+      message: `El recurso con ID ${id} fue rellenado al máximo`,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al actualizar el recurso" });
-  }
-};
-
-export const consumeResources = async (req, res) => {
-  try {
-    // Lógica para consumir recursos (a implementar)
-    res.json({ message: "Recursos consumidos correctamente" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al consumir los recursos" });
   }
 };

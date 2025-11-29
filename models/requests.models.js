@@ -28,26 +28,32 @@ export const updateMaxQuantities = async () => {
 };
 
 export const updateMaxQuantitiesById = async (id) => {
-  // obtener el recurso antes de actualizar
+  // obtener datos del recurso
   const [[resource]] = await pool.query(
-    `SELECT max_quantity FROM resources WHERE id = ?`,
+    `SELECT current_quantity, max_quantity FROM resources WHERE id = ?`,
     [id]
   );
 
-  console.log(resource);
+  // si no existe
+  if (!resource) return "NOT_FOUND";
 
-  if (!resource) return; // id no existe
+  // si ya está al máximo
+  if (resource.current_quantity >= resource.max_quantity) {
+    return "ALREADY_MAX";
+  }
 
-  // actualizar solo ese recurso
+  // actualizar al máximo
   await pool.query(
     `
     UPDATE resources
     SET current_quantity = max_quantity
     WHERE id = ?
-  `,
+    `,
     [id]
   );
 
-  // crear log
+  // registrar log
   await addLog(id, "refill_one", resource.max_quantity);
+
+  return "REFILLED";
 };
