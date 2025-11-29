@@ -11,10 +11,10 @@ export const seedDB = async () => {
 
   // Recursos iniciales
   const resources = [
-    ["Oxigeno", 50, 100, 20],
-    ["Agua", 500, 2000, 200],
-    ["Repuestos", 100, 1000, 50],
-    ["Comida", 100, 1000, 50],
+    ["oxigeno", 50, 100, 20],
+    ["agua", 500, 2000, 200],
+    ["repuestos", 100, 1000, 50],
+    ["comida", 100, 1000, 50],
   ];
 
   await pool.query(

@@ -97,3 +97,24 @@ export const consumeResourceById = async (id) => {
     remaining: newQuantity,
   };
 };
+
+export const autoConsumeOnePercent = async () => {
+  const [resources] = await pool.query(`SELECT * FROM resources`);
+
+  for (const resource of resources) {
+    const id = resource.id;
+    const consumeAmount = resource.max_quantity * 0.01; // 1%
+
+    let newQuantity = resource.current_quantity - consumeAmount;
+    if (newQuantity < 0) newQuantity = 0;
+
+    await pool.query(`UPDATE resources SET current_quantity = ? WHERE id = ?`, [
+      newQuantity,
+      id,
+    ]);
+
+    await addLog(id, "auto-consume", consumeAmount);
+  }
+
+  console.log("⏳ Se consumió 1% automáticamente");
+};
