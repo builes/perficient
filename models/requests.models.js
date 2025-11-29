@@ -1,0 +1,53 @@
+import { pool } from "../database/connect.js";
+
+export const addLog = async (resourceId, action, amount) => {
+  await pool.query(
+    `INSERT INTO log_history (resource_id, action, amount)
+     VALUES (?, ?, ?)`,
+    [resourceId, action, amount]
+  );
+};
+
+export const updateMaxQuantities = async () => {
+  // obtener recursos antes de actualizar
+  const [resources] = await pool.query(`
+    SELECT id, max_quantity 
+    FROM resources
+  `);
+
+  // actualizar todo
+  await pool.query(`
+    UPDATE resources
+    SET current_quantity = max_quantity
+  `);
+
+  // logs por cada recurso
+  for (const r of resources) {
+    await addLog(r.id, "refill_all", r.max_quantity);
+  }
+};
+
+export const updateMaxQuantitiesById = async (id) => {
+  // obtener el recurso antes de actualizar
+  const [[resource]] = await pool.query(
+    `SELECT max_quantity FROM resources WHERE id = ?`,
+    [id]
+  );
+
+  console.log(resource);
+
+  if (!resource) return; // id no existe
+
+  // actualizar solo ese recurso
+  await pool.query(
+    `
+    UPDATE resources
+    SET current_quantity = max_quantity
+    WHERE id = ?
+  `,
+    [id]
+  );
+
+  // crear log
+  await addLog(id, "refill_one", resource.max_quantity);
+};
